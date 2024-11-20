@@ -24,7 +24,7 @@ static glm::vec3 up(0, 1, 0);
 // View control
 static float viewAzimuth = 0.f;
 static float viewPolar = 0.f;
-static float viewDistance = 600.0f;
+static float viewDistance = 200.0f;
 
 static GLuint LoadTextureTileBox(const char *texture_file_path) {
     int w, h, channels;
@@ -205,4 +205,268 @@ struct Building {
 	GLuint mvpMatrixID;
 	GLuint textureSamplerID;
 	GLuint programID;
+
+
+    //Function to initalise the buildings
+    void initialize(glm::vec3 position, glm::vec3 scale) {
+
+      //Define the scale of the buildings geometry
+      this->position = position;
+      this->scale = scale;
+
+      //Create a Vertex array object
+      glGenVertexArrays(1, &vertexArrayID);
+      glBindVertexArray(vertexArrayID);
+
+      //Create a vertex buffer object to store the vertex data
+      glGenBuffers(1, &vertexBufferID);
+      glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+
+      //Create a vertex buffer object to store the colour data
+      glGenBuffers(1, &colorBufferID);
+      glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+
+      //Create a vertex buffer object to store the UV data
+      for(int i=0; i<24; i++) uv_buffer_data[2*i+1] *=5;
+
+      glGenBuffers(1, &uvBufferID);
+      glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data, GL_STATIC_DRAW);
+
+      //Create an index buffer object to store the index data that defines the trianlge faces
+      glGenBuffers(1, &indexBufferID);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
+
+    	// Create and compile our GLSL program from the shaders
+    	programID = LoadShadersFromFile("../street/box.vert", "../street/box.frag");
+    	if (programID == 0)
+    	{
+    		std::cerr << "Failed to load shaders." << std::endl;
+    	}
+
+    	// Get a handle for our "MVP" uniform
+    	mvpMatrixID = glGetUniformLocation(programID, "MVP");
+    	textureID = LoadTextureTileBox("../street/nightCity-facade.jpg");
+    	textureSamplerID = glGetUniformLocation(programID, "textureSampler");
+    }
+
+    //Function to render in the objects
+    void render(glm::mat4 cameraMatrix) {
+      glUseProgram(programID);
+      glEnableVertexAttribArray(0);
+      glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+      glEnableVertexAttribArray(1);
+      glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
+      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
+
+      // Model transform
+
+      glm::mat4 modelMatrix = glm::mat4(1.0f);
+      // Scale the box along each axis to make it look like a building
+      modelMatrix = glm::translate(modelMatrix, position);
+      modelMatrix = glm::scale(modelMatrix, scale);
+
+
+      // Set model-view-projection matrix
+      glm::mat4 mvp = cameraMatrix * modelMatrix;
+      glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+      //  Enable UV buffer and texture sampler
+
+      glEnableVertexAttribArray(2);
+      glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+      glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+      //Set textureSampler to use texture unit 0
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      glUniform1i(textureSamplerID, 0);
+
+
+      // Draw the box
+      glDrawElements(
+	  	GL_TRIANGLES,      // mode
+	  	36,    			   // number of indices
+	  	GL_UNSIGNED_INT,   // type
+	  	(void*)0           // element array buffer offset
+	  );
+
+      glDisableVertexAttribArray(0);
+      glDisableVertexAttribArray(1);
+      glDisableVertexAttribArray(2);
+    }
+
+	void cleanup() {
+    	glDeleteBuffers(1, &vertexBufferID);
+    	glDeleteBuffers(1, &colorBufferID);
+    	glDeleteBuffers(1, &indexBufferID);
+    	glDeleteVertexArrays(1, &vertexArrayID);
+    	//glDeleteBuffers(1, &uvBufferID);
+    	//glDeleteTextures(1, &textureID);
+    	glDeleteProgram(programID);
+    }
 };
+
+
+int main(void) {
+  // Initialise GLFW
+	if (!glfwInit())
+	{
+		std::cerr << "Failed to initialize GLFW." << std::endl;
+		return -1;
+	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // For MacOS
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// Open a window and create its OpenGL context
+	window = glfwCreateWindow(1024, 768, "Lab 2", NULL, NULL);
+	if (window == NULL)
+	{
+		std::cerr << "Failed to open a GLFW window." << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+
+	// Ensure we can capture the escape key being pressed below
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetKeyCallback(window, key_callback);
+
+	// Load OpenGL functions, gladLoadGL returns the loaded version, 0 on error.
+	int version = gladLoadGL(glfwGetProcAddress);
+	if (version == 0)
+	{
+		std::cerr << "Failed to initialize OpenGL context." << std::endl;
+		return -1;
+	}
+
+	// Background
+	glClearColor(0.2f, 0.2f, 0.25f, 0.0f);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+
+	std::vector<Building>buildings;
+	Building b;
+	b.initialize(glm::vec3(0, 0, 0), glm::vec3(16, 80, 16));
+	buildings.push_back(b);
+	//for(int i = 0; i< 10; ++i) {
+	//	for (int j = 0; j < 5; ++j) {
+	//		Building b;
+	//
+	//		// Set random x and z positions, ensuring enough space between buildings
+	//		float xPos = i * 60.0f + (rand() % 20); // Spacing along x-axis
+	//		float zPos = j * 60.0f + (rand() % 20); // Spacing along z-axis
+	//
+	//		glm::vec3 position(xPos, 0, zPos);
+	//
+	//		// Set random height for each building within a range
+	//		float height = 40 + (rand() % 80);
+	//		glm::vec3 scale(16, height, 16);
+	//
+	//		b.initialize(position, scale);
+	//		buildings.push_back(b);
+	//	}
+	//}
+    // ---------------------------
+
+	// Camera setup
+    eye_center.y = viewDistance * cos(viewPolar);
+    eye_center.x = viewDistance * cos(viewAzimuth);
+    eye_center.z = viewDistance * sin(viewAzimuth);
+
+	glm::mat4 viewMatrix, projectionMatrix;
+    glm::float32 FoV = 45;
+	glm::float32 zNear = 0.1f;
+	glm::float32 zFar = 1000.0f;
+	projectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, zNear, zFar);
+
+	do
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		viewMatrix = glm::lookAt(eye_center, lookat, up);
+		glm::mat4 vp = projectionMatrix * viewMatrix;
+
+		// Render the building
+		b.render(vp);
+		//for(auto &building : buildings) {
+		//	building.render(vp);
+		//}
+
+		// Swap buffers
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+	} // Check if the ESC key was pressed or the window was closed
+	while (!glfwWindowShouldClose(window));
+
+	// Clean up
+	//b.cleanup();
+	for(auto &building : buildings) {
+		building.cleanup();
+	}
+
+	// Close OpenGL window and terminate GLFW
+	glfwTerminate();
+
+	return 0;
+}
+
+
+
+
+
+// Is called whenever a key is pressed/released via GLFW
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
+{
+	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+	{
+		viewAzimuth = 0.f;
+		viewPolar = 0.f;
+		eye_center.y = viewDistance * cos(viewPolar);
+		eye_center.x = viewDistance * cos(viewAzimuth);
+		eye_center.z = viewDistance * sin(viewAzimuth);
+		std::cout << "Reset." << std::endl;
+	}
+
+	if (key == GLFW_KEY_UP && (action == GLFW_REPEAT || action == GLFW_PRESS))
+	{
+		viewPolar -= 0.1f;
+		eye_center.y = viewDistance * cos(viewPolar);
+	}
+
+	if (key == GLFW_KEY_DOWN && (action == GLFW_REPEAT || action == GLFW_PRESS))
+	{
+		viewPolar += 0.1f;
+		eye_center.y = viewDistance * cos(viewPolar);
+	}
+
+	if (key == GLFW_KEY_LEFT && (action == GLFW_REPEAT || action == GLFW_PRESS))
+	{
+		viewAzimuth -= 0.1f;
+		eye_center.x = viewDistance * cos(viewAzimuth);
+		eye_center.z = viewDistance * sin(viewAzimuth);
+	}
+
+	if (key == GLFW_KEY_RIGHT && (action == GLFW_REPEAT || action == GLFW_PRESS))
+	{
+		viewAzimuth += 0.1f;
+		eye_center.x = viewDistance * cos(viewAzimuth);
+		eye_center.z = viewDistance * sin(viewAzimuth);
+	}
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+}

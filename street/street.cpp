@@ -24,7 +24,7 @@ static glm::vec3 up(0, 1, 0);
 // View control
 static float viewAzimuth = 0.f;
 static float viewPolar = 0.f;
-static float viewDistance = 200.0f;
+static float viewDistance = 600.0f;
 
 static GLuint LoadTextureTileBox(const char *texture_file_path) {
     int w, h, channels;
@@ -357,29 +357,51 @@ int main(void) {
 	glEnable(GL_CULL_FACE);
 
 
-	std::vector<Building>buildings;
-	Building b;
-	b.initialize(glm::vec3(0, 0, 0), glm::vec3(16, 80, 16));
-	buildings.push_back(b);
-	//for(int i = 0; i< 10; ++i) {
-	//	for (int j = 0; j < 5; ++j) {
-	//		Building b;
-	//
-	//		// Set random x and z positions, ensuring enough space between buildings
-	//		float xPos = i * 60.0f + (rand() % 20); // Spacing along x-axis
-	//		float zPos = j * 60.0f + (rand() % 20); // Spacing along z-axis
-	//
-	//		glm::vec3 position(xPos, 0, zPos);
-	//
-	//		// Set random height for each building within a range
-	//		float height = 40 + (rand() % 80);
-	//		glm::vec3 scale(16, height, 16);
-	//
-	//		b.initialize(position, scale);
-	//		buildings.push_back(b);
-	//	}
-	//}
+	std::vector<Building> buildings;
+	std::vector<Building> buildings2;
+
+	//Create multiple buildings
+	for(int i = 0; i< 5; ++i) {
+
+			Building b;
+
+			// Set random x and z positions, ensuring enough space between buildings
+			float xPos = i * 60.0f ; // Spacing along x-axis
+			float zPos = i; // Spacing along z-axis
+
+			glm::vec3 position(xPos, 0, zPos);
+
+			// Set random height for each building within a range
+			float height = 40 ;
+			glm::vec3 scale(16, height, 16);
+
+			b.initialize(position, scale);
+			buildings.push_back(b);
+
+	}
+
+	for (int i=0; i< 5; ++i) {
+		Building b;
+
+		float xPos = i * 60.0f ;
+		float zPos = i + 100.0f;
+		glm::vec3 position(xPos, 0, zPos);
+
+		float height = 40 ;
+		glm::vec3 scale(16, height, 16);
+		b.initialize(position, scale);
+		buildings2.push_back(b);
+	}
     // ---------------------------
+
+	Building floor;
+
+	glm::vec3 position(200, -41, 100);
+	glm::vec3 scale(200, 1, 200);
+	floor.initialize(position, scale);
+	
+
+
 
 	// Camera setup
     eye_center.y = viewDistance * cos(viewPolar);
@@ -400,10 +422,16 @@ int main(void) {
 		glm::mat4 vp = projectionMatrix * viewMatrix;
 
 		// Render the building
-		b.render(vp);
-		//for(auto &building : buildings) {
-		//	building.render(vp);
-		//}
+		floor.render(vp);
+
+		//Render multiple buildings
+		for(auto &building : buildings) {
+			building.render(vp);
+		}
+
+		for (auto &building : buildings2) {
+			building.render(vp);
+		}
 
 		// Swap buffers
 		glfwSwapBuffers(window);

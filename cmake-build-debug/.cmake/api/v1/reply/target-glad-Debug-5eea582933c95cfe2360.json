@@ -1,9 +1,14 @@
 {
-	"archive" : {},
 	"artifacts" : 
 	[
 		{
-			"path" : "libglad.a"
+			"path" : "libglad.dll"
+		},
+		{
+			"path" : "libglad.dll.a"
+		},
+		{
+			"path" : "libglad.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -46,6 +51,12 @@
 					"fragment" : "-g -fdiagnostics-color=always"
 				}
 			],
+			"defines" : 
+			[
+				{
+					"define" : "glad_EXPORTS"
+				}
+			],
 			"includes" : 
 			[
 				{
@@ -61,8 +72,23 @@
 		}
 	],
 	"id" : "glad::@df5e3ce796715454c4bb",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32",
+				"role" : "libraries"
+			}
+		],
+		"language" : "C"
+	},
 	"name" : "glad",
-	"nameOnDisk" : "libglad.a",
+	"nameOnDisk" : "libglad.dll",
 	"paths" : 
 	{
 		"build" : "external/glad-3.3",
@@ -99,5 +125,5 @@
 			"sourceGroupIndex" : 1
 		}
 	],
-	"type" : "STATIC_LIBRARY"
+	"type" : "SHARED_LIBRARY"
 }

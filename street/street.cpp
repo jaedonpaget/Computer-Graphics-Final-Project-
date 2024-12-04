@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <render/shader.h>
+#include "skybox.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -460,6 +461,9 @@ int main(void) {
 	std::vector<Building> buildings;
 	std::vector<Building> buildings2;
 
+	Skybox skybox;
+	skybox.initialize();
+
 	Floor floor;
 	floor.initialize();
 
@@ -518,6 +522,8 @@ int main(void) {
 		viewMatrix = glm::lookAt(eye_center, lookat, up);
 		glm::mat4 vp = projectionMatrix * viewMatrix;
 
+		skybox.render(vp);
+
 		floor.render(vp);
 
 
@@ -545,6 +551,7 @@ int main(void) {
 	}
 
 	floor.cleanup();
+	skybox.cleanup();
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();

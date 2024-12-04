@@ -15,6 +15,7 @@
 
 static GLFWwindow *window;
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
+static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 // OpenGL camera view parameters
 static glm::vec3 eye_center;
@@ -25,6 +26,15 @@ static glm::vec3 up(0, 1, 0);
 static float viewAzimuth = 0.f;
 static float viewPolar = 0.f;
 static float viewDistance = 600.0f;
+
+// Variables for cursor view control
+static double lastX = 400, lastY = 300;
+static float yaw = -90.0f;       //Facing negative z
+static float pitch = 0.0f;
+static bool firstMouse = true;
+
+
+
 
 static GLuint LoadTextureTileBox(const char *texture_file_path) {
     int w, h, channels;
@@ -224,12 +234,12 @@ struct Building {
       glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 
       //Create a vertex buffer object to store the colour data
-      glGenBuffers(1, &colorBufferID);
-      glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+      //glGenBuffers(1, &colorBufferID);
+      //glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
+      //glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
 
       //Create a vertex buffer object to store the UV data
-      for(int i=0; i<24; i++) uv_buffer_data[2*i+1] *=5;
+      //for(int i=0; i<24; i++) uv_buffer_data[2*i+1] *=5;
 
       glGenBuffers(1, &uvBufferID);
       glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
@@ -260,9 +270,6 @@ struct Building {
       glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-      glEnableVertexAttribArray(1);
-      glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
-      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
 
@@ -280,9 +287,9 @@ struct Building {
 
       //  Enable UV buffer and texture sampler
 
-      glEnableVertexAttribArray(2);
+      glEnableVertexAttribArray(1);
       glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
-      glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
       //Set textureSampler to use texture unit 0
       glActiveTexture(GL_TEXTURE0);
@@ -300,7 +307,7 @@ struct Building {
 
       glDisableVertexAttribArray(0);
       glDisableVertexAttribArray(1);
-      glDisableVertexAttribArray(2);
+
     }
 
 	void cleanup() {
@@ -308,11 +315,101 @@ struct Building {
     	glDeleteBuffers(1, &colorBufferID);
     	glDeleteBuffers(1, &indexBufferID);
     	glDeleteVertexArrays(1, &vertexArrayID);
-    	//glDeleteBuffers(1, &uvBufferID);
-    	//glDeleteTextures(1, &textureID);
+    	glDeleteBuffers(1, &uvBufferID);
+    	glDeleteTextures(1, &textureID);
     	glDeleteProgram(programID);
     }
 };
+
+
+
+struct Floor {
+	GLuint vertexArrayID;
+	GLuint vertexBufferID;
+	GLuint uvBufferID;
+	GLuint textureID;
+	GLuint programID;
+	GLuint mvpMatrixID;
+	GLuint textureSamplerID;
+
+	void initialize() {
+		//Vertex data for a large quad
+		GLfloat vertex_buffer_data[] = {
+			-1000.0f, -40.0f, -1000.0f,
+			-1000.0f, -40.0f, 1000.0f,
+			1000.0f, -40.0f, 1000.0f,
+			1000.0f, -40.0f, -1000.0f
+		};
+
+		GLfloat uv_buffer_data[] = {
+			0.0f, 0.0f,
+			0.0f, 100.0f,
+			100.0f, 100.0f,
+			100.0f, 0.0f
+		};
+
+		glGenVertexArrays(1, &vertexArrayID);
+		glBindVertexArray(vertexArrayID);
+
+		glGenBuffers(1, &vertexBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &uvBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data, GL_STATIC_DRAW);
+
+		programID = LoadShadersFromFile("../street/floor.vert", "../street/floor.frag");
+		mvpMatrixID = glGetUniformLocation(programID, "MVP");
+		textureID = LoadTextureTileBox("../street/road_texture.jpg");
+		textureSamplerID = glGetUniformLocation(programID, "textureSampler");
+	}
+
+
+	void render(glm::mat4 cameraMatrix) {
+		glUseProgram(programID);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glm::mat4 modelMatrix = glm::mat4(1.0f);
+		glm::mat4 mvp = cameraMatrix * modelMatrix;
+		glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glUniform1i(textureSamplerID, 0);
+
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+	}
+
+
+	void cleanup() {
+		glDeleteBuffers(1, &vertexBufferID);
+		glDeleteBuffers(1, &uvBufferID);
+		glDeleteVertexArrays(1, &vertexArrayID);
+		glDeleteTextures(1, &textureID);
+		glDeleteProgram(programID);
+	}
+};
+
+
+
+
+
+
+
+
+
+
 
 
 int main(void) {
@@ -338,6 +435,9 @@ int main(void) {
 	}
 	glfwMakeContextCurrent(window);
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);   //Hide and capture cursor
+	glfwSetCursorPosCallback(window, mouse_callback);
+
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetKeyCallback(window, key_callback);
@@ -359,6 +459,9 @@ int main(void) {
 
 	std::vector<Building> buildings;
 	std::vector<Building> buildings2;
+
+	Floor floor;
+	floor.initialize();
 
 	//Create multiple buildings
 	for(int i = 0; i< 5; ++i) {
@@ -393,12 +496,6 @@ int main(void) {
 		buildings2.push_back(b);
 	}
     // ---------------------------
-
-	Building floor;
-
-	glm::vec3 position(200, -41, 100);
-	glm::vec3 scale(200, 1, 200);
-	floor.initialize(position, scale);
 	
 
 
@@ -421,8 +518,9 @@ int main(void) {
 		viewMatrix = glm::lookAt(eye_center, lookat, up);
 		glm::mat4 vp = projectionMatrix * viewMatrix;
 
-		// Render the building
 		floor.render(vp);
+
+
 
 		//Render multiple buildings
 		for(auto &building : buildings) {
@@ -446,6 +544,8 @@ int main(void) {
 		building.cleanup();
 	}
 
+	floor.cleanup();
+
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 
@@ -459,42 +559,66 @@ int main(void) {
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
-	if (key == GLFW_KEY_R && action == GLFW_PRESS)
-	{
-		viewAzimuth = 0.f;
-		viewPolar = 0.f;
-		eye_center.y = viewDistance * cos(viewPolar);
-		eye_center.x = viewDistance * cos(viewAzimuth);
-		eye_center.z = viewDistance * sin(viewAzimuth);
-		std::cout << "Reset." << std::endl;
+	float moveSpeed = 5.0f;
+	glm::vec3 direction = glm::normalize(lookat - eye_center);
+	glm::vec3 right = glm::normalize(glm::cross(direction, up));
+
+	if(key == GLFW_KEY_W && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+		lookat += direction * moveSpeed;
+		eye_center += direction * moveSpeed;
+	}
+	if(key == GLFW_KEY_S && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+		lookat -= direction * moveSpeed;
+		eye_center -= direction * moveSpeed;
+	}
+	if(key == GLFW_KEY_A && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+		lookat -= right * moveSpeed;
+		eye_center -= right * moveSpeed;
+	}
+	if(key == GLFW_KEY_D && (action == GLFW_REPEAT || action == GLFW_PRESS)) {
+		lookat += right * moveSpeed;
+		eye_center += right * moveSpeed;
 	}
 
-	if (key == GLFW_KEY_UP && (action == GLFW_REPEAT || action == GLFW_PRESS))
-	{
-		viewPolar -= 0.1f;
-		eye_center.y = viewDistance * cos(viewPolar);
-	}
-
-	if (key == GLFW_KEY_DOWN && (action == GLFW_REPEAT || action == GLFW_PRESS))
-	{
-		viewPolar += 0.1f;
-		eye_center.y = viewDistance * cos(viewPolar);
-	}
-
-	if (key == GLFW_KEY_LEFT && (action == GLFW_REPEAT || action == GLFW_PRESS))
-	{
-		viewAzimuth -= 0.1f;
-		eye_center.x = viewDistance * cos(viewAzimuth);
-		eye_center.z = viewDistance * sin(viewAzimuth);
-	}
-
-	if (key == GLFW_KEY_RIGHT && (action == GLFW_REPEAT || action == GLFW_PRESS))
-	{
-		viewAzimuth += 0.1f;
-		eye_center.x = viewDistance * cos(viewAzimuth);
-		eye_center.z = viewDistance * sin(viewAzimuth);
-	}
-
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	//Close the window
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+}
+
+
+static void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (firstMouse) {
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+		return;
+	}
+
+	float xoffset = float(xpos - lastX);
+	float yoffset = float(lastY - ypos);
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	//Prevent flipping
+	if(pitch > 89.0f) {
+		pitch = 89.0f;
+	}
+	if(pitch < -89.0f) {
+		pitch = -89.0f;
+	}
+
+	//Calculate new direction
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	lookat = eye_center + glm::normalize(direction);
 }

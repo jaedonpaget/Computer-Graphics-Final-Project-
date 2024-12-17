@@ -8,6 +8,6 @@ GLuint LoadShadersFromFile(const char *vertex_file_path, const char *fragment_fi
 
 GLuint LoadShadersFromString(std::string VertexShaderCode, std::string FragmentShaderCode);
 
-GLuint LoadCubemapTexture(const char *texture_file_path);
+
 
 #endif

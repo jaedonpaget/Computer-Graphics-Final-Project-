@@ -38,33 +38,302 @@ static bool firstMouse = true;
 
 
 static GLuint LoadTextureTileBox(const char *texture_file_path) {
-    int w, h, channels;
-    uint8_t* img = stbi_load(texture_file_path, &w, &h, &channels, 3);
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+	int w, h, channels;
+	stbi_set_flip_vertically_on_load(false);
+	uint8_t* img = stbi_load(texture_file_path, &w, &h, &channels, 3);
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
-    // To tile textures on a box, we set wrapping to repeat
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// To tile textures on a box, we set wrapping to repeat
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    if (img) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, img);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        std::cout << "Failed to load texture " << texture_file_path << std::endl;
-    }
-    stbi_image_free(img);
+	if (img) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, img);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	} else {
+		std::cout << "Failed to load texture " << texture_file_path << std::endl;
+	}
+	stbi_image_free(img);
 
-    return texture;
+	return texture;
 }
 
 
 
 
+struct Skybox {
+	glm::vec3 position;		// Position of the box
+	glm::vec3 scale;		// Size of the box in each axis
 
+	GLfloat vertex_buffer_data[72] = {	// Vertex definition for a canonical box
+		// Front face
+		-1.0f, -1.0f, 1.0f,
+		1.0f, -1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+
+		// Back face
+		1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+
+		// Left face
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, -1.0f,
+
+		// Right face
+		1.0f, -1.0f, 1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, 1.0f, -1.0f,
+		1.0f, 1.0f, 1.0f,
+
+		// Top face
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, -1.0f,
+		-1.0f, 1.0f, -1.0f,
+
+		// Bottom face
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, 1.0f,
+		-1.0f, -1.0f, 1.0f,
+	};
+
+	GLfloat color_buffer_data[72] = {
+		// Front, red
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,
+
+		// Back, yellow
+		1.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+
+		// Left, green
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+
+		// Right, cyan
+		0.0f, 1.0f, 1.0f,
+		0.0f, 1.0f, 1.0f,
+		0.0f, 1.0f, 1.0f,
+		0.0f, 1.0f, 1.0f,
+
+		// Top, blue
+		0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 1.0f,
+
+		// Bottom, magenta
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 1.0f,
+	};
+
+	GLuint index_buffer_data[36] = {		// 12 triangle faces of a box
+		0, 3, 2,
+		0, 2, 1,
+
+		4, 7, 6,
+		4, 6, 5,
+
+		8, 11, 10,
+		8, 10, 9,
+
+		12, 15, 14,
+		12, 14, 13,
+
+		16, 19, 18,
+		16, 18, 17,
+
+		20, 23, 22,
+		20, 22, 21,
+	};
+
+    // TODO: Define UV buffer data
+    // ---------------------------
+    // ---------------------------
+
+	GLfloat uv_buffer_data[48] = {
+		// Front face (positive Z)
+		0.5f, 0.666f,  // Top right
+		0.25f, 0.666f, // Top left
+		0.25f, 0.333f, // Bottom left
+		0.5f, 0.333f,  // Bottom right
+
+		// Back face (negative Z)
+		1.0f, 0.666f,  // Top right
+		0.75f, 0.666f, // Top left
+		0.75f, 0.333f, // Bottom left
+		1.0f, 0.333f,  // Bottom right
+
+
+		0.75f, 0.666f, // Top left
+		0.5f, 0.666f,  // Top right
+		0.5f, 0.333f,  // Bottom right
+		0.75f, 0.333f, // Bottom left
+
+		// Left face (negative X) - Correct
+		0.25f, 0.666f, // Top right
+		0.0f, 0.666f,  // Top left
+		0.0f, 0.333f,  // Bottom left
+		0.25f, 0.333f, // Bottom right
+
+		// Right face (positive X) - Correct
+
+		0.5f, 0.333f,
+		0.25f, 0.333f, // Top left
+		  // Top right
+		0.25f, 0.0f,
+		0.5f, 0.0f,    // Bottom right
+		  // Bottom left
+
+		// Bottom face (negative Y) - Now using the previous Top UV coordinates
+		0.5f, 1.0f,
+		0.25f, 1.0f,   // Top left
+		   // Top right
+		0.25f, 0.666f,
+		0.5f, 0.666f,  // Bottom right
+		 // Bottom left
+
+	};
+
+	// OpenGL buffers
+	GLuint vertexArrayID;
+	GLuint vertexBufferID;
+	GLuint indexBufferID;
+	GLuint colorBufferID;
+	GLuint uvBufferID;
+	GLuint textureID;
+
+	// Shader variable IDs
+	GLuint mvpMatrixID;
+	GLuint textureSamplerID;
+	GLuint programID;
+
+	void initialize(glm::vec3 position, glm::vec3 scale) {
+		// Define scale of the building geometry
+		this->position = position;
+		this->scale = scale;
+
+		// Create a vertex array object
+		glGenVertexArrays(1, &vertexArrayID);
+		glBindVertexArray(vertexArrayID);
+
+		// Create a vertex buffer object to store the vertex data
+		glGenBuffers(1, &vertexBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+
+		// Create a vertex buffer object to store the color data
+        // TODO:
+		glGenBuffers(1, &colorBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+
+		// TODO: Create a vertex buffer object to store the UV data
+		// --------------------------------------------------------
+        // --------------------------------------------------------
+		glGenBuffers(1, &uvBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data, GL_STATIC_DRAW);
+
+		// Create an index buffer object to store the index data that defines triangle faces
+		glGenBuffers(1, &indexBufferID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_buffer_data), index_buffer_data, GL_STATIC_DRAW);
+
+		// Create and compile our GLSL program from the shaders
+		programID = LoadShadersFromFile("../street/skybox.vert", "../street/skybox.frag");
+		if (programID == 0)
+		{
+			std::cerr << "Failed to load shaders." << std::endl;
+		}
+
+		// Get a handle for our "MVP" uniform
+		mvpMatrixID = glGetUniformLocation(programID, "MVP");
+
+        // TODO: Load a texture
+        textureID = LoadTextureTileBox("../street/sky.png");
+
+
+        // TODO: Get a handle to texture sampler
+        textureSamplerID =glGetUniformLocation(programID, "textureSampler");
+	}
+
+	void render(glm::mat4 cameraMatrix) {
+		glUseProgram(programID);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferID);
+
+		// TODO: Model transform
+		// -----------------------
+        glm::mat4 modelMatrix = glm::mat4();
+        // Scale the box along each axis to make it look like a building
+        modelMatrix = glm::scale(modelMatrix, scale);
+        // -----------------------
+
+		// Set model-view-projection matrix
+		glm::mat4 mvp = cameraMatrix * modelMatrix;
+		glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+		// TODO: Enable UV buffer and texture sampler
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glUniform1i(textureSamplerID, 0);
+
+
+
+		// Draw the box
+		glDrawElements(
+			GL_TRIANGLES,      // mode
+			36,    			   // number of indices
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+		);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+	}
+
+	void cleanup() {
+		glDeleteBuffers(1, &vertexBufferID);
+		glDeleteBuffers(1, &colorBufferID);
+		glDeleteBuffers(1, &indexBufferID);
+		glDeleteVertexArrays(1, &vertexArrayID);
+		glDeleteBuffers(1, &uvBufferID);
+		glDeleteTextures(1, &textureID);
+		glDeleteProgram(programID);
+	}
+
+};
 
 
 
@@ -541,6 +810,9 @@ int main(void) {
 	std::vector<Building> buildings;
 	std::vector<Building> buildings2;
 
+	Skybox skybox;
+	skybox.initialize(glm::vec3(0, -40, 0), glm::vec3(1000, 1000, 1000));
+
 	Floor floor;
 	floor.initialize();
 
@@ -569,14 +841,14 @@ int main(void) {
 			Building b;
 
 			// Set random x and z positions, ensuring enough space between buildings
-			float xPos = i * 60.0f ; // Spacing along x-axis
+			float xPos = i * 100.0f ; // Spacing along x-axis
 			float zPos = i; // Spacing along z-axis
 
 			glm::vec3 position(xPos, 0, zPos);
 
 			// Set random height for each building within a range
-			float height = 40 ;
-			glm::vec3 scale(16, height, 16);
+			float height = 200 ;
+			glm::vec3 scale(30, height, 30);
 
 			b.initialize(position, scale);
 			buildings.push_back(b);
@@ -586,12 +858,12 @@ int main(void) {
 	for (int i=0; i< 5; ++i) {
 		Building b;
 
-		float xPos = i * 60.0f ;
-		float zPos = i + 100.0f;
+		float xPos = i * 100.0f ;
+		float zPos = i + 200.0f;
 		glm::vec3 position(xPos, 0, zPos);
 
-		float height = 40 ;
-		glm::vec3 scale(16, height, 16);
+		float height = 200 ;
+		glm::vec3 scale(30, height, 30);
 		b.initialize(position, scale);
 		buildings2.push_back(b);
 	}
@@ -618,7 +890,9 @@ int main(void) {
 		viewMatrix = glm::lookAt(eye_center, lookat, up);
 		glm::mat4 vp = projectionMatrix * viewMatrix;
 
-
+		glDisable(GL_DEPTH_TEST);
+		skybox.render(vp);
+		glEnable(GL_DEPTH_TEST);
 
 		floor.render(vp);
 		park.render(vp);
@@ -635,6 +909,8 @@ int main(void) {
 		for (auto &building : buildings2) {
 			building.render(vp);
 		}
+
+
 
 		// Swap buffers
 		glfwSwapBuffers(window);

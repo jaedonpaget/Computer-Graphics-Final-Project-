@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <render/shader.h>
-#include "skybox.h"
+
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -60,6 +60,14 @@ static GLuint LoadTextureTileBox(const char *texture_file_path) {
 
     return texture;
 }
+
+
+
+
+
+
+
+
 
 
 //Constructor for the 'box' that will act as a building
@@ -219,7 +227,7 @@ struct Building {
 
 
     //Function to initalise the buildings
-    void initialize(glm::vec3 position, glm::vec3 scale) {
+    void initialize(glm::vec3 position, glm::vec3 scale, const char* texturePath="../street/nightCity-facade.jpg") {
 
       //Define the scale of the buildings geometry
       this->position = position;
@@ -260,7 +268,7 @@ struct Building {
 
     	// Get a handle for our "MVP" uniform
     	mvpMatrixID = glGetUniformLocation(programID, "MVP");
-    	textureID = LoadTextureTileBox("../street/nightCity-facade.jpg");
+    	textureID = LoadTextureTileBox(texturePath);
     	textureSamplerID = glGetUniformLocation(programID, "textureSampler");
     }
 
@@ -404,7 +412,79 @@ struct Floor {
 
 
 
+struct Park {
+	GLuint vertexArrayID;
+	GLuint vertexBufferID;
+	GLuint uvBufferID;
+	GLuint textureID;
+	GLuint programID;
+	GLuint mvpMatrixID;
+	GLuint textureSamplerID;
 
+	void initialize() {
+		GLfloat vertex_buffer_data[] = {
+			400.0f, -39.9f, 400.0f,    // Top right corner
+			400.0f, -39.9f, 800.0f,    // Bottom right
+			800.0f, -39.9f, 800.0f,    // Bottom left
+			800.0f, -39.9f, 400.0f     // Top left
+		};
+
+		GLfloat uv_buffer_data[] = {
+			0.0f, 0.0f,
+			0.0f, 20.0f,
+			20.0f, 20.0f,
+			20.0f, 0.0f
+		};
+
+		glGenVertexArrays(1, &vertexArrayID);
+		glBindVertexArray(vertexArrayID);
+
+		glGenBuffers(1, &vertexBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &uvBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data, GL_STATIC_DRAW);
+
+		programID = LoadShadersFromFile("../street/floor.vert", "../street/floor.frag");
+		mvpMatrixID = glGetUniformLocation(programID, "MVP");
+		textureID = LoadTextureTileBox("../street/grass.jpg");
+		textureSamplerID = glGetUniformLocation(programID, "textureSampler");
+	}
+
+	void render(glm::mat4 cameraMatrix) {
+		glUseProgram(programID);
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glm::mat4 mvp = cameraMatrix * glm::mat4(1.0f);
+		glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glUniform1i(textureSamplerID, 0);
+
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+	}
+
+	void cleanup() {
+		glDeleteBuffers(1, &vertexBufferID);
+		glDeleteBuffers(1, &uvBufferID);
+		glDeleteVertexArrays(1, &vertexArrayID);
+		glDeleteTextures(1, &textureID);
+		glDeleteProgram(programID);
+	}
+
+};
 
 
 
@@ -452,7 +532,7 @@ int main(void) {
 	}
 
 	// Background
-	glClearColor(0.2f, 0.2f, 0.25f, 0.0f);
+	//glClearColor(0.2f, 0.2f, 0.25f, 0.0f);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -461,11 +541,27 @@ int main(void) {
 	std::vector<Building> buildings;
 	std::vector<Building> buildings2;
 
-	Skybox skybox;
-	skybox.initialize();
-
 	Floor floor;
 	floor.initialize();
+
+	Park park;
+	park.initialize();
+
+	Building fence[5];
+	//Front fence
+	fence[0].initialize(glm::vec3(600.0f, -20.0f, 400.0f), glm::vec3(125.0f, 20.0f, 1.0f), "../street/fence.jpg");
+
+	// Right fence
+	fence[1].initialize(glm::vec3(800.0f, -20.0f, 600.0f), glm::vec3(1.0f, 20.0f, 200.0f), "../street/fence.jpg");
+
+	// Back fence
+	fence[2].initialize(glm::vec3(600.0f, -20.0f, 800.0f), glm::vec3(200.0f, 20.0f, 1.0f), "../street/fence.jpg");
+
+	// Left fence (with gap for entrance)
+	fence[3].initialize(glm::vec3(400.0f, -20.0f, 600.0f), glm::vec3(1.0f, 20.0f, 200.0f), "../street/fence.jpg");
+
+	//fence[4].initialize(glm::vec3(400.0f, -20.0f, 200.0f), glm::vec3(125.0f, 20.0f, 1.0f), "../street/fence.jpg");
+
 
 	//Create multiple buildings
 	for(int i = 0; i< 5; ++i) {
@@ -510,9 +606,9 @@ int main(void) {
     eye_center.z = viewDistance * sin(viewAzimuth);
 
 	glm::mat4 viewMatrix, projectionMatrix;
-    glm::float32 FoV = 45;
+    glm::float32 FoV = 90;
 	glm::float32 zNear = 0.1f;
-	glm::float32 zFar = 1000.0f;
+	glm::float32 zFar = 2000.0f;
 	projectionMatrix = glm::perspective(glm::radians(FoV), 4.0f / 3.0f, zNear, zFar);
 
 	do
@@ -522,16 +618,19 @@ int main(void) {
 		viewMatrix = glm::lookAt(eye_center, lookat, up);
 		glm::mat4 vp = projectionMatrix * viewMatrix;
 
-		skybox.render(vp);
+
 
 		floor.render(vp);
-
-
+		park.render(vp);
+		for(int i=0; i <5; i++) {
+			fence[i].render(vp);
+		}
 
 		//Render multiple buildings
 		for(auto &building : buildings) {
 			building.render(vp);
 		}
+
 
 		for (auto &building : buildings2) {
 			building.render(vp);
@@ -544,14 +643,17 @@ int main(void) {
 	} // Check if the ESC key was pressed or the window was closed
 	while (!glfwWindowShouldClose(window));
 
-	// Clean up
-	//b.cleanup();
+
 	for(auto &building : buildings) {
 		building.cleanup();
 	}
 
 	floor.cleanup();
-	skybox.cleanup();
+	park.cleanup();
+	for(int i = 0; i < 5; i++) {
+		fence[i].cleanup();
+	}
+
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();

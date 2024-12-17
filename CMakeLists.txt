@@ -19,8 +19,6 @@ include_directories(
 add_executable(street
         street/street.cpp
         street/render/shader.cpp
-        street/skybox.cpp
-        street/skybox.h
 )
 
 

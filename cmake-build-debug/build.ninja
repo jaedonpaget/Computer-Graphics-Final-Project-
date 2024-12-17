@@ -63,13 +63,6 @@ build CMakeFiles/street.dir/street/render/shader.cpp.obj: CXX_COMPILER__street_u
   OBJECT_DIR = CMakeFiles\street.dir
   OBJECT_FILE_DIR = CMakeFiles\street.dir\street\render
 
-build CMakeFiles/street.dir/street/skybox.cpp.obj: CXX_COMPILER__street_unscanned_Debug C$:/Users/jaedo/OneDrive/Documents/Code/Computer$ Graphics/FinalProject/Computer-Graphics-Final-Project-/street/skybox.cpp || cmake_object_order_depends_target_street
-  DEP_FILE = CMakeFiles\street.dir\street\skybox.cpp.obj.d
-  FLAGS = -g -fdiagnostics-color=always
-  INCLUDES = -I"C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glfw-3.1.2/include" -I"C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glm-0.9.7.1" -I"C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glad-opengl-3.3/include" -I"C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external" -I"C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/street" -I"C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glad-3.3/include"
-  OBJECT_DIR = CMakeFiles\street.dir
-  OBJECT_FILE_DIR = CMakeFiles\street.dir\street
-
 
 # =============================================================================
 # Link build statements for EXECUTABLE target street
@@ -78,7 +71,7 @@ build CMakeFiles/street.dir/street/skybox.cpp.obj: CXX_COMPILER__street_unscanne
 #############################################
 # Link the executable street.exe
 
-build street.exe: CXX_EXECUTABLE_LINKER__street_Debug CMakeFiles/street.dir/street/street.cpp.obj CMakeFiles/street.dir/street/render/shader.cpp.obj CMakeFiles/street.dir/street/skybox.cpp.obj | glfw3dll.a libglad.dll.a || glfw3.dll libglad.dll
+build street.exe: CXX_EXECUTABLE_LINKER__street_Debug CMakeFiles/street.dir/street/street.cpp.obj CMakeFiles/street.dir/street/render/shader.cpp.obj | glfw3dll.a libglad.dll.a || glfw3.dll libglad.dll
   FLAGS = -g
   LINK_LIBRARIES = -lopengl32  -lglu32  glfw3dll.a  libglad.dll.a  -lopengl32  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\street.dir

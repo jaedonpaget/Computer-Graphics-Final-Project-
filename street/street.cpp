@@ -809,9 +809,10 @@ int main(void) {
 
 	std::vector<Building> buildings;
 	std::vector<Building> buildings2;
+	std::vector<Building> buildings3;
 
 	Skybox skybox;
-	skybox.initialize(glm::vec3(0, -40, 0), glm::vec3(1000, 1000, 1000));
+	skybox.initialize(glm::vec3(0, 0, 0), glm::vec3(1000, 1000, 1000));
 
 	Floor floor;
 	floor.initialize();
@@ -844,10 +845,10 @@ int main(void) {
 			float xPos = i * 100.0f ; // Spacing along x-axis
 			float zPos = i; // Spacing along z-axis
 
-			glm::vec3 position(xPos, 0, zPos);
+			glm::vec3 position(xPos, 110, zPos);
 
 			// Set random height for each building within a range
-			float height = 200 ;
+			float height = 150 ;
 			glm::vec3 scale(30, height, 30);
 
 			b.initialize(position, scale);
@@ -860,14 +861,45 @@ int main(void) {
 
 		float xPos = i * 100.0f ;
 		float zPos = i + 200.0f;
-		glm::vec3 position(xPos, 0, zPos);
+		glm::vec3 position(xPos, 110, zPos);
 
-		float height = 200 ;
+		float height = 150 ;
 		glm::vec3 scale(30, height, 30);
 		b.initialize(position, scale);
 		buildings2.push_back(b);
 	}
     // ---------------------------
+
+	// Create buildings in a grid layout with better spacing
+	for (int row = 0; row < 4; ++row) {
+		for (int col = 0; col < 4; ++col) {
+			Building b;
+
+			// Fixed minimum spacing between buildings (200 units)
+			float spacing = 200.0f;
+
+			// Random offset for each building (up to 50 units)
+			float randomOffsetX = static_cast<float>(rand()) / RAND_MAX * 50.0f;
+			float randomOffsetZ = static_cast<float>(rand()) / RAND_MAX * 50.0f;
+
+			// Calculate position with spacing and offset
+			float xPos = -800.0f + (col * spacing) + randomOffsetX;
+			float zPos = -800.0f + (row * spacing) + randomOffsetZ;
+
+			// Random height between 100 and 300 units
+			float height = 100.0f + static_cast<float>(rand()) / RAND_MAX * 200.0f;
+
+			// Random building size between 30 and 50 units
+			float buildingWidth = 30.0f + static_cast<float>(rand()) / RAND_MAX * 20.0f;
+			float buildingDepth = 30.0f + static_cast<float>(rand()) / RAND_MAX * 20.0f;
+
+			glm::vec3 position(xPos, height/2, zPos);
+			glm::vec3 scale(buildingWidth, height, buildingDepth);
+
+			b.initialize(position, scale);
+			buildings3.push_back(b);
+		}
+	}
 	
 
 
@@ -910,6 +942,10 @@ int main(void) {
 			building.render(vp);
 		}
 
+		for(auto &building : buildings3) {
+			building.render(vp);
+		}
+
 
 
 		// Swap buffers
@@ -921,6 +957,14 @@ int main(void) {
 
 
 	for(auto &building : buildings) {
+		building.cleanup();
+	}
+
+	for(auto &building : buildings2) {
+		building.cleanup();
+	}
+
+	for(auto &building : buildings3) {
 		building.cleanup();
 	}
 

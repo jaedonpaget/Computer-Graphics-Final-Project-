@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream> 
 #include <vector>
+#include <stb/stb_image.h>
 
 GLuint LoadShadersFromFile(const char *vertex_file_path, const char *fragment_file_path)
 {
@@ -193,3 +194,5 @@ GLuint LoadShadersFromString(std::string VertexShaderCode, std::string FragmentS
 
 	return ProgramID;
 }
+
+

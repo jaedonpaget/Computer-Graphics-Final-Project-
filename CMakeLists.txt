@@ -21,6 +21,7 @@ add_executable(street
         street/render/shader.cpp
         street/Floor.cpp
         street/stb_image.cpp
+        street/bot.cpp
 )
 
 

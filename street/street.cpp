@@ -13,6 +13,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "bot.h"
 #include "Floor.h"
 #include "lightInfo.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -934,6 +935,11 @@ int main(void) {
     Floor floor;
     floor.initialize(glm::vec3(0.0f, -130.0f, 0.0f), glm::vec3(floorSize, 1.0f, floorSize), "../street/road_texture.jpg");
 
+	Bot bot;
+	bot.initialize();
+
+
+
     // Create buildings
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
@@ -985,6 +991,8 @@ int main(void) {
             building.renderDepth(depthShaderProgramID, lightSpaceMatrix);
         }
 
+
+
         // Main rendering pass
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, windowWidth, windowHeight);
@@ -1004,6 +1012,8 @@ int main(void) {
         for (Building& building : buildings3) {
             building.render(vp, lightSpaceMatrix, depthMap);
         }
+    	bot.render(vp);
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -1016,6 +1026,7 @@ int main(void) {
     }
     skybox.cleanup();
     floor.cleanup();
+	bot.cleanup();
 
     glfwTerminate();
     return 0;

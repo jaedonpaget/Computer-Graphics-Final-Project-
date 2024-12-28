@@ -95,15 +95,15 @@
 			[
 				{
 					"backtrace" : 5,
-					"path" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glad-3.3/include"
+					"path" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glad-3.3/include"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glfw-3.1.2/src"
+					"path" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glfw-3.1.2/src"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug/external/glfw-3.1.2/src"
+					"path" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug/external/glfw-3.1.2/src"
 				}
 			],
 			"language" : "C",

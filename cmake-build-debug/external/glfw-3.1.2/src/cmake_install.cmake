@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glfw-3.1.2/src
+# Install script for directory: C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glfw-3.1.2/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glfw-3.1.2
+# Install script for directory: C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glfw-3.1.2
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug/external/glfw-3.1.2/src/cmake_install.cmake")
+  include("C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug/external/glfw-3.1.2/src/cmake_install.cmake")
 
 endif()
 

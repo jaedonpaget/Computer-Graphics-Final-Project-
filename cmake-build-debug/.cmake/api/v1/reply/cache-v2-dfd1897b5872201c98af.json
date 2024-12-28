@@ -67,7 +67,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug"
+			"value" : "c:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -587,7 +587,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -671,7 +671,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -1303,7 +1303,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug"
 		},
 		{
 			"name" : "Computer-Graphics-Final-Project-_IS_TOP_LEVEL",
@@ -1327,7 +1327,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject"
 		},
 		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_OpenGL",
@@ -1363,7 +1363,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug/external/glfw-3.1.2"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug/external/glfw-3.1.2"
 		},
 		{
 			"name" : "GLFW_BUILD_DOCS",
@@ -1459,7 +1459,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glfw-3.1.2"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glfw-3.1.2"
 		},
 		{
 			"name" : "GLFW_USE_EGL",
@@ -1530,6 +1530,18 @@
 			"value" : "glu32"
 		},
 		{
+			"name" : "TinyGLTF_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for TinyGLTF."
+				}
+			],
+			"type" : "PATH",
+			"value" : "TinyGLTF_DIR-NOTFOUND"
+		},
+		{
 			"name" : "_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED",
 			"properties" : 
 			[
@@ -1587,7 +1599,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/cmake-build-debug/external/glad-3.3"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/cmake-build-debug/external/glad-3.3"
 		},
 		{
 			"name" : "glad_IS_TOP_LEVEL",
@@ -1611,7 +1623,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glad-3.3"
+			"value" : "C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glad-3.3"
 		},
 		{
 			"name" : "glfw_LIB_DEPENDS",

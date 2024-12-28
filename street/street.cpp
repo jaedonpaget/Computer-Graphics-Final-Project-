@@ -5,7 +5,8 @@
 
 #include <render/shader.h>
 
-
+#include <algorithm>
+#include <cmath>
 #include <stb/stb_image.h>
 
 #include <vector>
@@ -13,6 +14,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "sand.h"
 #include "bot.h"
 #include "Floor.h"
 #include "lightInfo.h"
@@ -37,7 +39,7 @@ static glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);          // World up
 // View control
 static float viewAzimuth = 0.f;
 static float viewPolar = 0.f;
-static float viewDistance = 600.0f;
+static float viewDistance = 1000.0f;
 
 // Variables for cursor view control
 static double lastX = 400, lastY = 300;
@@ -69,6 +71,12 @@ GLuint depthMap;
 
 static bool playAnimation = true;
 static float playbackSpeed = 2.0f;
+
+static double lastFrameTime = 0.0;
+static int frameCount = 0;
+static double lastFPSTime = 0.0;
+static int fps = 0;
+
 
 
 
@@ -331,7 +339,7 @@ struct Skybox {
 	GLuint textureSamplerID;
 	GLuint programID;
 
-	void initialize(glm::vec3 position, glm::vec3 scale) {
+	void initialize(glm::vec3 position, glm::vec3 scale, const char* texturePath) {
 		// Define scale of the building geometry
 		this->position = position;
 		this->scale = scale;
@@ -402,7 +410,7 @@ struct Skybox {
 		lightSpaceMatrixID = glGetUniformLocation(programID, "lightSpaceMatrix");
 
         // TODO: Load a texture
-        textureID = LoadTextureTileBox("../street/sky.png");
+        textureID = LoadTextureTileBox(texturePath);
 
 
         // TODO: Get a handle to texture sampler
@@ -670,7 +678,7 @@ struct Building {
 	GLuint lightSpaceMatrixID;
 	GLuint shadowMapID;
 
-	void initialize(glm::vec3 position, glm::vec3 scale) {
+	void initialize(glm::vec3 position, glm::vec3 scale, const char* textureFilePath) {
 		// Define scale of the building geometry
 		this->position = position;
 		this->scale = scale;
@@ -684,11 +692,13 @@ struct Building {
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 
+
+
 		// Create a vertex buffer object to store the color data
         // TODO:
-		glGenBuffers(1, &colorBufferID);
-		glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+		//glGenBuffers(1, &colorBufferID);
+		//glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
 
 		glGenBuffers(1, &normalBufferID);
 		glBindBuffer(GL_ARRAY_BUFFER, normalBufferID);
@@ -708,6 +718,8 @@ struct Building {
 		// TODO: Create a vertex buffer object to store the UV data
 		// --------------------------------------------------------
         // --------------------------------------------------------
+
+
 		glGenBuffers(1, &uvBufferID);
 		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data,
@@ -730,7 +742,8 @@ struct Building {
 
         // --------------------
         // --------------------
-		textureID = LoadTextureTileBox("../street/nightCity-facade.jpg");
+		textureID = LoadTextureTileBox(textureFilePath);
+
 
         // -------------------------------------
         // -------------------------------------
@@ -860,11 +873,74 @@ struct Building {
 };
 
 
+static std::vector<Sand> sandChunks;
 
+void updateSandChunks(const glm::vec3& cameraPosition) {
+	const float chunkSize = 1000.0f;
+	const float baseHeight = -132.0f;
+	const int renderDistance = 2; // Number of chunks to render in each direction
 
+	// Calculate current chunk coordinates
+	int currentChunkX = static_cast<int>(floor(cameraPosition.x / chunkSize));
+	int currentChunkZ = static_cast<int>(floor(cameraPosition.z / chunkSize));
 
+	// Check which chunks should exist
+	for (int x = currentChunkX - renderDistance; x <= currentChunkX + renderDistance; x++) {
+		for (int z = currentChunkZ - renderDistance; z <= currentChunkZ + renderDistance; z++) {
+			glm::vec3 chunkPosition(x * chunkSize, baseHeight, z * chunkSize);
 
+			// Check if chunk already exists
+			bool chunkExists = false;
+			for (const auto& chunk : sandChunks) {
+				if (chunk.position == chunkPosition) {
+					chunkExists = true;
+					break;
+				}
+			}
 
+			// Create new chunk if it doesn't exist
+			if (!chunkExists) {
+				Sand newChunk;
+				newChunk.initialize(chunkPosition,
+					glm::vec3(chunkSize, 1.0f, chunkSize),
+					"../street/sand.jpg");
+				sandChunks.push_back(newChunk);
+			}
+		}
+	}
+}
+
+// Initialize the first 9 chunks around origin
+void initializeSandChunks() {
+	float chunkSize = 1000.0f;
+
+	// Create 3x3 grid of chunks centered around origin
+	for (int x = -1; x <= 1; x++) {
+		for (int z = -1; z <= 1; z++) {
+			Sand newChunk;
+			glm::vec3 chunkPos(x * chunkSize, -132.0f, z * chunkSize + 2000.0f);
+			newChunk.initialize(chunkPos,
+				glm::vec3(chunkSize, 1.0f, chunkSize),
+				"../street/sand.jpg");
+			sandChunks.push_back(newChunk);
+		}
+	}
+}
+
+void calculateFPS() {
+	double currentTime = glfwGetTime();
+	frameCount++;
+
+	// Update FPS counter every second
+	if (currentTime - lastFPSTime >= 1.0) {
+		fps = frameCount;
+		frameCount = 0;
+		lastFPSTime = currentTime;
+
+		// Print FPS to console
+		std::cout << "FPS: " << fps << std::endl;
+	}
+}
 
 
 
@@ -931,12 +1007,25 @@ int main(void) {
     GLuint depthShaderProgramID = LoadShadersFromFile("../street/depth.vert", "../street/depth.frag");
 
     std::vector<Building> buildings3;
+	std::vector<Building> walls;
+
+
     Skybox skybox;
-    skybox.initialize(glm::vec3(0, 0, 0), glm::vec3(1000, 1000, 1000));
+    skybox.initialize(glm::vec3(0, 0, 0), glm::vec3(1200, 1200, 1200), "../street/sky.png");
+
 
     float floorSize = 1000.0f;
     Floor floor;
     floor.initialize(glm::vec3(0.0f, -130.0f, 0.0f), glm::vec3(floorSize, 1.0f, floorSize), "../street/road_texture.jpg");
+
+
+
+
+	//float sandSize = 1000.0f;
+	//Sand sand;
+	//sand.initialize(glm::vec3(0.0f, -130.0f, 2000.0f), glm::vec3(sandSize, 1.0f, sandSize), "../street/sand.jpg");
+	updateSandChunks(cameraPosition);
+
 
 	Bot bot;
 	bot.initialize();
@@ -944,6 +1033,38 @@ int main(void) {
 	float time = 0.0f;
 
 
+	Building wallNorth, wallSouth, wallEast, wallWest;
+	float wallHeight = 50.0f;
+	float wallThickness = 10.0f;
+
+	wallNorth.initialize(glm::vec3(0.0f, -100.0f, -1000),
+	glm::vec3(floorSize, wallHeight, wallThickness), "../street/warning.png");
+	// South wall
+	wallSouth.initialize(
+		glm::vec3(0.0f, -100.0f, 1000),
+		glm::vec3(floorSize, wallHeight, wallThickness), "../street/warning.png"
+	);
+
+	// East wall
+	wallEast.initialize(
+		glm::vec3(1000, -100.0f, 0.0f),
+		glm::vec3(wallThickness, wallHeight, floorSize), "../street/warning.png"
+	);
+
+	// West wall
+	wallWest.initialize(
+		glm::vec3(-1000, -100.0f, 0.0f),
+		glm::vec3(wallThickness, wallHeight, floorSize), "../street/warning.png"
+	);
+	// Add walls to vector
+	walls.push_back(wallNorth);
+	walls.push_back(wallSouth);
+	walls.push_back(wallEast);
+	walls.push_back(wallWest);
+
+	Building sign;
+
+	sign.initialize(glm::vec3(800,0,0), glm::vec3(2,130,100), "../street/warning.png");
 
 
     // Create buildings
@@ -958,10 +1079,14 @@ int main(void) {
             float height = 100.0f + static_cast<float>(rand()) / RAND_MAX * 200.0f;
             float buildingWidth = 30.0f + static_cast<float>(rand()) / RAND_MAX * 20.0f;
             float buildingDepth = 30.0f + static_cast<float>(rand()) / RAND_MAX * 20.0f;
-            b.initialize(glm::vec3(xPos, 0, zPos), glm::vec3(buildingWidth, height, buildingDepth));
+            b.initialize(glm::vec3(xPos, 0, zPos), glm::vec3(buildingWidth, height, buildingDepth), "../street/nightCity-facade.jpg");
             buildings3.push_back(b);
         }
     }
+
+
+
+
 
     // Camera setup
     glm::mat4 viewMatrix, projectionMatrix;
@@ -997,6 +1122,12 @@ int main(void) {
             building.renderDepth(depthShaderProgramID, lightSpaceMatrix);
         }
 
+    	for (Building& wall : walls) {
+    		wall.renderDepth(depthShaderProgramID, lightSpaceMatrix);
+    	}
+
+    	sign.renderDepth(depthShaderProgramID, lightSpaceMatrix);
+
 
 
         // Main rendering pass
@@ -1008,16 +1139,39 @@ int main(void) {
         viewMatrix = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
         glm::mat4 vp = projectionMatrix * viewMatrix;
 
+    	glm::mat4 skybox2Matrix = glm::mat4(1.0f);
+    	skybox2Matrix = glm::translate(skybox2Matrix, cameraPosition);
+    	skybox2Matrix = glm::scale(skybox2Matrix, glm::vec3(2000, 2000, 2000));
+
+    	// Modify the view matrix to remove translation
+    	glm::mat4 viewWithoutTranslation = glm::mat4(glm::mat3(viewMatrix));
+    	glm::mat4 skyboxVP = projectionMatrix * viewWithoutTranslation;
+
         // Render skybox
         glDisable(GL_DEPTH_TEST);
-        skybox.render(vp);
+        skybox.render(skyboxVP);
         glEnable(GL_DEPTH_TEST);
+
+
 
         // Render floor and buildings
         floor.render(vp, lightSpaceMatrix, depthMap, sunLightInfo, cameraPosition);
+    	//sand.render(vp, lightSpaceMatrix, depthMap, sunLightInfo, cameraPosition);
+    	updateSandChunks(cameraPosition);
+    	for (auto& chunk : sandChunks) {
+    		chunk.render(vp, lightSpaceMatrix, depthMap, sunLightInfo, cameraPosition);
+    	}
+
+
         for (Building& building : buildings3) {
             building.render(vp, lightSpaceMatrix, depthMap);
         }
+
+    	for(Building& wall : walls) {
+    		wall.render(vp, lightSpaceMatrix, depthMap);
+    	}
+
+    	sign.render(vp, lightSpaceMatrix, depthMap);
 
 
     	double currentTime = glfwGetTime();
@@ -1031,6 +1185,13 @@ int main(void) {
     	bot.render(vp);
 
 
+    	calculateFPS();
+
+
+
+
+
+
         glfwSwapBuffers(window);
         glfwPollEvents();
 
@@ -1040,9 +1201,19 @@ int main(void) {
     for (Building& building : buildings3) {
         building.cleanup();
     }
+	for(Building& wall : walls) {
+		wall.cleanup();
+	}
     skybox.cleanup();
+	skybox2.cleanup();
     floor.cleanup();
 	bot.cleanup();
+	//sand.cleanup();
+	for (auto& chunk : sandChunks) {
+		chunk.cleanup();
+	}
+	sign.cleanup();
+
 
     glfwTerminate();
     return 0;

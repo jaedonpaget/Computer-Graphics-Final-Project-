@@ -22,6 +22,7 @@ add_executable(street
         street/Floor.cpp
         street/stb_image.cpp
         street/bot.cpp
+        street/sand.cpp
 )
 
 

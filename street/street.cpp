@@ -1205,7 +1205,6 @@ int main(void) {
 		wall.cleanup();
 	}
     skybox.cleanup();
-	skybox2.cleanup();
     floor.cleanup();
 	bot.cleanup();
 	//sand.cleanup();

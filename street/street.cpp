@@ -67,6 +67,9 @@ const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 GLuint depthMapFBO;
 GLuint depthMap;
 
+static bool playAnimation = true;
+static float playbackSpeed = 2.0f;
+
 
 
 
@@ -937,6 +940,9 @@ int main(void) {
 
 	Bot bot;
 	bot.initialize();
+	static double lastTime = glfwGetTime();
+	float time = 0.0f;
+
 
 
 
@@ -1012,6 +1018,16 @@ int main(void) {
         for (Building& building : buildings3) {
             building.render(vp, lightSpaceMatrix, depthMap);
         }
+
+
+    	double currentTime = glfwGetTime();
+    	float deltaTime = float(currentTime - lastTime);
+    	lastTime = currentTime;
+
+    	if(playAnimation) {
+    		time += deltaTime * playbackSpeed;
+    		bot.update(time);
+    	}
     	bot.render(vp);
 
 

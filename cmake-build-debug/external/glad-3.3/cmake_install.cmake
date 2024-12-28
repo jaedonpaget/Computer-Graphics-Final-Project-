@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalProject/Computer-Graphics-Final-Project-/external/glad-3.3
+# Install script for directory: C:/Users/jaedo/OneDrive/Documents/Code/Computer Graphics/FinalFinalProject/external/glad-3.3
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

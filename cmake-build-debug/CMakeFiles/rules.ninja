@@ -80,7 +80,7 @@ rule C_SHARED_LIBRARY_LINKER__glfw_Debug
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = "C:\Program Files\JetBrains\CLion 2024.2.2\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -S"C:\Users\jaedo\OneDrive\Documents\Code\Computer Graphics\FinalProject\Computer-Graphics-Final-Project-" -B"C:\Users\jaedo\OneDrive\Documents\Code\Computer Graphics\FinalProject\Computer-Graphics-Final-Project-\cmake-build-debug"
+  command = "C:\Program Files\JetBrains\CLion 2024.2.2\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -S"C:\Users\jaedo\OneDrive\Documents\Code\Computer Graphics\FinalFinalProject" -B"C:\Users\jaedo\OneDrive\Documents\Code\Computer Graphics\FinalFinalProject\cmake-build-debug"
   description = Re-running CMake...
   generator = 1
 

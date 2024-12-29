@@ -2,7 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtc/type_ptr.hpp>
+#include <iomanip>
 #include <render/shader.h>
 
 #include <algorithm>
@@ -14,6 +15,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "particle.h"
 #include "sand.h"
 #include "bot.h"
 #include "Floor.h"
@@ -57,16 +59,12 @@ static glm::vec3 lightLookAt(0.0f, 0.0f, 0.0f); // Where the light is pointing
 static glm::vec3 lightDirection; // Computed in each frame
 Light sunLightInfo(lightDirection, lightPosition, lightColor, lightLookAt, lightIntensity);
 
-// Shadow mapping
-
-
 static float depthFoV = 90.0f;
 static float depthNear = 90.0f;
 static float depthFar = 1000.0f;
 
-static float lightSpeed = 100.0f; // Movement speed for the light source
+static float lightSpeed = 100.0f;
 
-// Shadow mapping parameters
 const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 GLuint depthMapFBO;
 GLuint depthMap;
@@ -74,10 +72,7 @@ GLuint depthMap;
 static bool playAnimation = true;
 static float playbackSpeed = 2.0f;
 
-static double lastFrameTime = 0.0;
-static int frameCount = 0;
-static double lastFPSTime = 0.0;
-static int fps = 0;
+
 
 
 static GLuint LoadTextureTileBox(const char *texture_file_path) {
@@ -614,9 +609,7 @@ struct Building {
         20, 22, 23,
     };
 
-    // TODO: Define UV buffer data
-    // ---------------------------
-    // ---------------------------
+
     GLfloat uv_buffer_data[48] = {
         // Front
         0.0f, 1.0f,
@@ -686,30 +679,12 @@ struct Building {
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 
 
-        // Create a vertex buffer object to store the color data
-        // TODO:
-        //glGenBuffers(1, &colorBufferID);
-        //glBindBuffer(GL_ARRAY_BUFFER, colorBufferID);
-        //glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
-
         glGenBuffers(1, &normalBufferID);
         glBindBuffer(GL_ARRAY_BUFFER, normalBufferID);
         glBufferData(GL_ARRAY_BUFFER, sizeof(normal_buffer_data), normal_buffer_data, GL_STATIC_DRAW);
 
-        /*
-         *Typically, texture coordinates are stored in an array in pairs,
-         *where each pair corresponds to the (u, v) coordinates that map a texture to a polygon in computer graphics.
-         *In the format where each pair is stored as [u0, v0, u1, v1, ..., un, vn], the u values usually represent
-         *the horizontal component of the texture mapping, and the v values represent the vertical component.
-         *
-         *By multiplying every second element by 5, which corresponds to
-         *all the v components (given the starting index of 1 and the stride of 2),
-         *the loop is scaling the vertical component of these texture coordinates.
-         */
+
         for (int i = 0; i < 24; ++i) uv_buffer_data[2 * i + 1] *= 5;
-        // TODO: Create a vertex buffer object to store the UV data
-        // --------------------------------------------------------
-        // --------------------------------------------------------
 
 
         glGenBuffers(1, &uvBufferID);
@@ -731,13 +706,9 @@ struct Building {
         // Get a handle for our "MVP" uniform
         mvpMatrixID = glGetUniformLocation(programID, "MVP");
 
-        // --------------------
-        // --------------------
+
         textureID = LoadTextureTileBox(textureFilePath);
 
-
-        // -------------------------------------
-        // -------------------------------------
         textureSamplerID = glGetUniformLocation(programID, "textureSampler");
         lightPositionID = glGetUniformLocation(programID, "lightPosition");
         lightColorID = glGetUniformLocation(programID, "lightColor");
@@ -787,9 +758,7 @@ struct Building {
         glUniformMatrix4fv(glGetUniformLocation(programID, "modelMatrix"), 1, GL_FALSE, &modelMatrix[0][0]);
         glUniformMatrix3fv(glGetUniformLocation(programID, "normalMatrix"), 1, GL_FALSE, &normalMatrix[0][0]);
 
-        // TODO: Enable UV buffer and texture sampler
-        // ------------------------------------------
-        // ------------------------------------------
+
         glEnableVertexAttribArray(2);
         glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -821,7 +790,6 @@ struct Building {
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-        //glDisableVertexAttribArray(2);
     }
 
     void renderDepth(GLuint shaderProgramID, glm::mat4 lightSpaceMatrix) {
@@ -855,8 +823,6 @@ struct Building {
         glDeleteBuffers(1, &colorBufferID);
         glDeleteBuffers(1, &indexBufferID);
         glDeleteVertexArrays(1, &vertexArrayID);
-        //glDeleteBuffers(1, &uvBufferID);
-        //glDeleteTextures(1, &textureID);
         glDeleteProgram(programID);
     }
 };
@@ -900,20 +866,7 @@ void updateSandChunks(const glm::vec3 &cameraPosition) {
 }
 
 
-void calculateFPS() {
-    double currentTime = glfwGetTime();
-    frameCount++;
 
-    // Update FPS counter every second
-    if (currentTime - lastFPSTime >= 1.0) {
-        fps = frameCount;
-        frameCount = 0;
-        lastFPSTime = currentTime;
-
-        // Print FPS to console
-        std::cout << "FPS: " << fps << std::endl;
-    }
-}
 
 
 int main(void) {
@@ -929,7 +882,8 @@ int main(void) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window and create its OpenGL context
-    window = glfwCreateWindow(1024, 768, "Lab 2", NULL, NULL);
+
+    window = glfwCreateWindow(1024, 768, "JaedonPaget", NULL, NULL);
     if (window == NULL) {
         std::cerr << "Failed to open a GLFW window." << std::endl;
         glfwTerminate();
@@ -969,7 +923,6 @@ int main(void) {
     float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-    // Attach the depth texture as FBO's depth buffer
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
     glDrawBuffer(GL_NONE);
@@ -977,6 +930,8 @@ int main(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     GLuint depthShaderProgramID = LoadShadersFromFile("../street/depth.vert", "../street/depth.frag");
+
+    GLuint particleShaderProgram = LoadShadersFromFile("../street/particle.vert", "../street/particle.frag");
 
     std::vector<Building> buildings3;
     std::vector<Building> walls;
@@ -994,9 +949,7 @@ int main(void) {
                      "../street/road_texture.jpg");
 
 
-    //float sandSize = 1000.0f;
-    //Sand sand;
-    //sand.initialize(glm::vec3(0.0f, -130.0f, 2000.0f), glm::vec3(sandSize, 1.0f, sandSize), "../street/sand.jpg");
+
     updateSandChunks(cameraPosition);
 
 
@@ -1076,6 +1029,29 @@ int main(void) {
     cornerBuildings.push_back(corner3);
     cornerBuildings.push_back(corner4);
 
+    // Get positions from corner buildings for particle systems
+    glm::vec3 corner1Pos = glm::vec3(-900.0f + wallGap, cornerHeight - 130.0f, -900.0f + wallGap);
+    glm::vec3 corner2Pos = glm::vec3(900.0f - wallGap, cornerHeight - 130.0f, -900.0f + wallGap);
+    glm::vec3 corner3Pos = glm::vec3(-900.0f + wallGap, cornerHeight - 130.0f, 900.0f - wallGap);
+    glm::vec3 corner4Pos = glm::vec3(900.0f - wallGap, cornerHeight - 130.0f, 900.0f - wallGap);
+
+
+
+    // Create particle systems for each corner
+    ParticleSystem particleSystem1(200, particleShaderProgram);
+    ParticleSystem particleSystem2(200, particleShaderProgram);
+    ParticleSystem particleSystem3(200, particleShaderProgram);
+    ParticleSystem particleSystem4(200, particleShaderProgram);
+
+    // Initialize each particle system at corner building positions
+    particleSystem1.initialize(corner1Pos, corner1Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+    particleSystem2.initialize(corner2Pos, corner2Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+    particleSystem3.initialize(corner3Pos, corner3Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+    particleSystem4.initialize(corner4Pos, corner4Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+
+
+
+
     // Create edge buildings
     float edgeSpacing = 200.0f;
     // North edge
@@ -1136,6 +1112,9 @@ int main(void) {
     glm::float32 zNear = 0.1f;
     glm::float32 zFar = 2000.0f;
     projectionMatrix = glm::perspective(glm::radians(FoV), (float) windowWidth / windowHeight, zNear, zFar);
+
+    float fTime = 0.0f;			// Time for measuring fps
+    unsigned long frames = 0;
 
     do {
         // Shadow mapping pass
@@ -1204,7 +1183,6 @@ int main(void) {
 
         // Render floor and buildings
         floor.render(vp, lightSpaceMatrix, depthMap, sunLightInfo, cameraPosition);
-        //sand.render(vp, lightSpaceMatrix, depthMap, sunLightInfo, cameraPosition);
         updateSandChunks(cameraPosition);
         for (auto &chunk: sandChunks) {
             chunk.render(vp, lightSpaceMatrix, depthMap, sunLightInfo, cameraPosition);
@@ -1244,7 +1222,40 @@ int main(void) {
         bot.render(vp * botTransform);
 
 
-        calculateFPS();
+        // Update particles
+        particleSystem1.update(deltaTime, corner1Pos, corner1Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+        particleSystem2.update(deltaTime, corner2Pos, corner2Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+        particleSystem3.update(deltaTime, corner3Pos, corner3Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+        particleSystem4.update(deltaTime, corner4Pos, corner4Pos + glm::vec3(0.0f, 50.0f, 0.0f));
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_PROGRAM_POINT_SIZE);
+
+        // Render particles
+        particleSystem1.render(projectionMatrix * viewMatrix);
+        particleSystem2.render(projectionMatrix * viewMatrix);
+        particleSystem3.render(projectionMatrix * viewMatrix);
+        particleSystem4.render(projectionMatrix * viewMatrix);
+
+        glDisable(GL_BLEND);
+        glDisable(GL_PROGRAM_POINT_SIZE);
+
+
+
+        // FPS tracking
+        // Count number of frames over a few seconds and take average
+        frames++;
+        fTime += deltaTime;
+        if (fTime > 2.0f) {
+            float fps = frames / fTime;
+            frames = 0;
+            fTime = 0;
+
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(2) << "JaedonPaget | Frames per second (FPS): " << fps;
+            glfwSetWindowTitle(window, stream.str().c_str());
+        }
 
 
         glfwSwapBuffers(window);
@@ -1267,11 +1278,15 @@ int main(void) {
     skybox.cleanup();
     floor.cleanup();
     bot.cleanup();
-    //sand.cleanup();
     for (auto &chunk: sandChunks) {
         chunk.cleanup();
     }
     sign.cleanup();
+    particleSystem1.cleanup();
+    particleSystem2.cleanup();
+    particleSystem3.cleanup();
+    particleSystem4.cleanup();
+
 
 
     glfwTerminate();
